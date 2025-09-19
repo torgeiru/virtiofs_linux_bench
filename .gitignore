@@ -6,3 +6,6 @@ test_file.bin
 
 # Ignore benchmark executable
 seq_read_bench
+
+# Ignore venv
+.venv
