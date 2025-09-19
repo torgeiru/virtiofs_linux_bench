@@ -1,0 +1,8 @@
+# Ignore benchmark results file
+benchmark_results.csv
+
+# Ignore test binary file
+test_file.bin
+
+# Ignore benchmark executable
+seq_read_bench
