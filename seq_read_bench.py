@@ -80,10 +80,8 @@ def load_and_validate_results():
         
         # Validate we have expected chunk sizes and run counts
         chunk_sizes = df['chunk_size'].unique()
-        expected_chunks = [100, 1024, 65536]  # 100B, 1K, 64K
         
         print(f"Found chunk sizes: {sorted(chunk_sizes)}")
-        print(f"Expected chunk sizes: {expected_chunks}")
         
         # Check run counts per chunk size
         for chunk in chunk_sizes:
@@ -108,11 +106,18 @@ def generate_plots(df):
     
     # Prepare data with readable chunk size labels
     df_plot = df.copy()
-    df_plot['chunk_label'] = df_plot['chunk_size'].map({
-        100: '100B\n(Small)',
-        1024: '1KB\n(Medium)', 
-        65536: '64KB\n(Large)'
-    })
+
+    chunk_size_map = {
+        100: "100B",
+        1024: "1KiB"
+    }
+    for i in range(1, 33):
+        size = i * 8192
+        chunk_size_map[size] = f"{8*i}KiB"
+    expected_chunk_sizes = [100, 1024]
+    expected_chunk_sizes.extend([8192 * i for i in range(1, 33)])
+
+    df_plot['chunk_label'] = df_plot['chunk_size'].map(chunk_size_map)
     
     # Plot 1: Read Time
     sns.boxplot(data=df_plot, x='chunk_label', y='read_time_ms', ax=ax1)
@@ -122,7 +127,7 @@ def generate_plots(df):
     ax1.grid(True, alpha=0.3)
     
     # Add statistics to read time plot
-    for i, chunk in enumerate([100, 1024, 65536]):
+    for i, chunk in enumerate(expected_chunk_sizes):
         chunk_data = df[df['chunk_size'] == chunk]['read_time_ms']
         median_val = chunk_data.median()
         ax1.text(i, median_val, f'Med: {median_val:.1f}ms', 
@@ -137,7 +142,7 @@ def generate_plots(df):
     ax2.grid(True, alpha=0.3)
     
     # Add statistics to throughput plot
-    for i, chunk in enumerate([100, 1024, 65536]):
+    for i, chunk in enumerate(expected_chunk_sizes):
         chunk_data = df[df['chunk_size'] == chunk]['throughput_mbps']
         median_val = chunk_data.median()
         ax2.text(i, median_val, f'Med: {median_val:.1f}MB/s', 
@@ -153,8 +158,8 @@ def generate_plots(df):
     
     # Display summary statistics
     print("\n=== BENCHMARK SUMMARY ===")
-    for chunk in [100, 1024, 65536]:
-        chunk_name = {100: "Small (100B)", 1024: "Medium (1KB)", 65536: "Large (64KB)"}[chunk]
+    for chunk in expected_chunk_sizes:
+        chunk_name = chunk_size_map[chunk]
         chunk_data = df[df['chunk_size'] == chunk]
 
         print(f"\n{chunk_name}:")
